@@ -20,6 +20,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorMgr;
     private Sensor accelerometer;
+    private Sensor gyroSensor;
 
     private final static long GRAPH_REFRESH_WAIT_MS = 20;
 
@@ -45,8 +46,17 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyroSensor = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
         if (accelerometer == null) {
             Toast.makeText(this, getString(R.string.toast_no_accel_error),
+                    Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        if (gyroSensor == null) {
+            Toast.makeText(this, getString(R.string.toast_no_light_error),
                     Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -59,7 +69,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
-        sensorMgr.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        //sensorMgr.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_FASTEST);
         th = new GraphRefreshThread();
         th.start();
     }
@@ -86,6 +97,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         //vz = event.values[2];
 
         /*移動平均による安定化*/
+
         ax[idx] = event.values[0];
         float sx = 0;
         for (int i = 0; i < N; i++){

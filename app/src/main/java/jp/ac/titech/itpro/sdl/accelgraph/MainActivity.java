@@ -23,7 +23,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private final static long GRAPH_REFRESH_WAIT_MS = 20;
 
-    private GraphRefreshThread th = null;
+    private GraphRefreshThread th = null; //グラフ描画用スレッド
     private Handler handler;
 
     private float vx, vy, vz;
@@ -72,13 +72,53 @@ public class MainActivity extends Activity implements SensorEventListener {
         sensorMgr.unregisterListener(this);
     }
 
+    private final int N = 5;
+    private float[] ax = new float[N]; private int idx = 0;
+    private float[] ay = new float[N]; private int idy = 0;
+    private float[] az = new float[N]; private int idz = 0;
+    private final static float alpha = 0.8F;
+
     @Override
     public void onSensorChanged(SensorEvent event) {
-        vx = event.values[0];
-        vy = event.values[1];
-        vz = event.values[2];
+        /*安定化なし*/
+        //vx = event.values[0];
+        //vy = event.values[1];
+        //vz = event.values[2];
+
+        /*移動平均による安定化*/
+        ax[idx] = event.values[0];
+        float sx = 0;
+        for (int i = 0; i < N; i++){
+            sx = sx + ax[i];
+        }
+        vx = sx / N;
+        idx = (idx + 1) % N;
+
+        ay[idy] = event.values[1];
+        float sy = 0;
+        for (int i = 0; i < N; i++){
+            sy = sy + ay[i];
+        }
+        vy = sy / N;
+        idy = (idy + 1) % N;
+
+        az[idz] = event.values[2];
+        float sz = 0;
+        for (int i = 0; i < N; i++){
+            sz = sz + az[i];
+        }
+        vz = sz / N;
+        idz = (idz + 1) % N;
+
+        /*前回値との重み付き平均による安定化*/
+        //vx = alpha * vx + (1 - alpha) * event.values[0];
+        //vy = alpha * vy + (1 - alpha) * event.values[1];
+        //vz = alpha * vz + (1 - alpha) * event.values[2];
+
         rate = ((float) (event.timestamp - prevts)) / (1000 * 1000);
         prevts = event.timestamp;
+        final float[] ev = event.values;
+        Log.i(TAG, "ax=" + ev[0] + ", ay=" + ev[1] + ", az=" + ev[2]);
     }
 
     @Override
@@ -102,8 +142,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     });
                     Thread.sleep(GRAPH_REFRESH_WAIT_MS);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Log.e(TAG, e.toString());
                 th = null;
             }

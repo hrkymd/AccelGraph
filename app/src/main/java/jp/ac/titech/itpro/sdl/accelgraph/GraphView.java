@@ -52,7 +52,7 @@ public class GraphView extends View {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas) { //書き換えが行われるたびに呼び出される
         super.onDraw(canvas);
 
         // grid lines
